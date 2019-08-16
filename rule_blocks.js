@@ -1,12 +1,11 @@
 Blockly.Blocks['rule_group'] = {
   init: function() {
-    this.appendValueInput("NAME")
-        .setCheck(null)
-        .appendField(new Blockly.FieldDropdown([["AND all of these rules","and"], ["OR all of these rules","or"]]), "operator")
-        .appendField(new Blockly.FieldDropdown([["Succeed","1"], ["Fail","0"]]), "NAME");
-    this.appendStatementInput("NAME")
-        .setCheck(["rule_group", "rule"]);
-    this.setPreviousStatement(true, ["rule_group", "rule"]);
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldDropdown([["ALL of these rules","and"], ["ANY of these rules","or"]]), "operator")
+        .appendField(new Blockly.FieldDropdown([["Succeed","1"], ["Fail","0"]]), "desired_value");
+    this.appendStatementInput("children")
+        .setCheck(null);
+    this.setPreviousStatement(true, ["event_validate", "rule_group", "rule"]);
     this.setNextStatement(true, ["rule_group", "rule"]);
     this.setColour(120);
  this.setTooltip("Rule Group");
@@ -16,30 +15,26 @@ Blockly.Blocks['rule_group'] = {
 
 Blockly.Blocks['is_contained_in'] = {
   init: function() {
-    this.appendValueInput("property")
-        .setCheck(null)
+    this.appendDummyInput()
         .appendField("Property")
         .appendField(new Blockly.FieldTextInput("BranchId"), "property");
-    this.appendDummyInput()
-        .appendField("is contained in:");
     this.appendValueInput("array")
         .setCheck("Array")
-        .appendField(new Blockly.FieldTextInput("default"), "NAME");
+        .appendField("is contained in");
     this.setInputsInline(false);
-    this.setOutput(true, null);
+    this.setPreviousStatement(true, null);
     this.setColour(230);
  this.setTooltip("");
  this.setHelpUrl("");
   }
 };
 
-Blockly.Blocks['rule'] = {
+Blockly.Blocks['basic_expression'] = {
   init: function() {
-    this.appendValueInput("property")
-        .setCheck(null)
-        .appendField(new Blockly.FieldTextInput("Vehicle.Mileage"), "NAME");
-    this.appendValueInput("expression")
-        .setCheck(null);
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldDropdown([["BranchId","branchid"], ["Vehicle Mileage","vehicle.mileage"], ["Vehicle Manufacturer","vehicle.manufacturer"]]), "property")
+        .appendField(new Blockly.FieldDropdown([["Equals","Equal"], ["Not Equals","NotEqual"], ["Greater Than","GreaterThan"], ["Greater Than or Equal","GreaterThanOrEqual"], ["Less Than","LessThan"], ["Less Than or Equal","LessThanOrEqual"]]), "expression_type")
+        .appendField(new Blockly.FieldTextInput(""), "value");
     this.setInputsInline(true);
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
@@ -49,20 +44,101 @@ Blockly.Blocks['rule'] = {
   }
 };
 
-Blockly.Blocks['basic_expression'] = {
+Blockly.Blocks['event_validate'] = {
   init: function() {
-    this.appendValueInput("property")
-        .setCheck(null)
-        .appendField(new Blockly.FieldTextInput("branchid"), "property");
-    this.appendValueInput("expression_type")
-        .setCheck(null)
-        .appendField(new Blockly.FieldDropdown([["Equals","Equal"], ["Not Equals","NotEqual"], ["Greater Than","GreaterThan"], ["Greater Than or Equal","GreaterThanOrEqual"], ["Less Than","LessThan"], ["Less Than or Equal","LessThanOrEqual"], ["Is Contained In","IsContainedIn"]]), "expression_type");
-    this.appendValueInput("value")
-        .setCheck(null)
-        .appendField(new Blockly.FieldTextInput(""), "value");
+    this.appendDummyInput()
+        .appendField("ALL of these Rules must valid");
+    this.appendStatementInput("children")
+        .setCheck("rule_group");
     this.setInputsInline(true);
+    this.setColour(270);
+ this.setTooltip("Root RuleGroup");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['is_between'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldDropdown([["BranchId","branchid"], ["Vehicle.Mileage","vehicle.mileage"], ["Vehicle.Manufacturer","vehicle.manufacturer"]]), "property")
+        .appendField("is between")
+        .appendField(new Blockly.FieldTextInput(""), "lower")
+        .appendField("and")
+        .appendField(new Blockly.FieldTextInput(""), "upper");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
     this.setColour(230);
  this.setTooltip("");
  this.setHelpUrl("");
   }
+};
+
+Blockly.JavaScript['rule_group'] = function(block) {
+  var dropdown_operator = block.getFieldValue('operator');
+  var dropdown_desired_value = block.getFieldValue('desired_value');
+  var statements_children = Blockly.JavaScript.statementToCode(block, 'children');
+
+  if(statements_children === "") {
+    statements_children = "[]"
+  }
+  // TODO: Assemble JavaScript into code variable.
+  var code = JSON.stringify({
+    ExpressionType: dropdown_operator,
+    DesiredResult: dropdown_desired_value,
+    Rules: JSON.parse(statements_children)
+  });
+  return code;
+};
+
+Blockly.JavaScript['event_validate'] = function(block) {
+  var statements_children = Blockly.JavaScript.statementToCode(block, 'children');
+
+  if(statements_children === "") {
+    statements_children = "[]"
+  }
+  // TODO: Assemble JavaScript into code variable.
+  var code = JSON.stringify({
+    ExpressionType: "and",
+    DesiredResult: 1,
+    Rules: JSON.parse(statements_children)
+  });
+  return code;
+};
+
+Blockly.JavaScript['is_contained_in'] = function(block) {
+  var text_property = block.getFieldValue('property');
+  var value_array = Blockly.JavaScript.valueToCode(block, 'array', Blockly.JavaScript.ORDER_ATOMIC);
+  // TODO: Assemble JavaScript into code variable.
+  var code = JSON.stringify({
+    Property: text_property,
+    Expression: "IsContainedIn",
+    Value: value_array.join("|")
+  });
+  return code;
+};
+
+Blockly.JavaScript['basic_expression'] = function(block) {
+  var dropdown_property = block.getFieldValue('property');
+  var dropdown_expression_type = block.getFieldValue('expression_type');
+  var text_value = block.getFieldValue('value');
+  // TODO: Assemble JavaScript into code variable.
+  var code = JSON.stringify({
+    Property: dropdown_property,
+    Expression: dropdown_expression_type,
+    Value: text_value
+  });
+  return code;
+};
+
+Blockly.JavaScript['is_between'] = function(block) {
+  var dropdown_property = block.getFieldValue('property');
+  var text_lower = block.getFieldValue('lower');
+  var text_upper = block.getFieldValue('upper');
+  // TODO: Assemble JavaScript into code variable.
+  var code = JSON.stringify({
+    Property: dropdown_property,
+    Expression: "IsBetween",
+    Value: `${text_lower}|${text_upper}`
+  });
+  return code;
 };

@@ -2,22 +2,32 @@
     <head>
         <script src="blockly_compressed.js"></script>
         <script src="blocks_compressed.js"></script>
+        <script src="generators/javascript.js"></script>
+
         <script src="rule_blocks.js"></script>
         <script src="msg/js/en.js"></script>
     </head>
 
     <body>
-        <div id="blocklyDiv" style="height: 480px; width: 600px;"></div>
+        <div id="blocklyDiv" style="height: 720px; width: 1024px;"></div>
         <xml id="toolbox" style="display: none">
-            <block type="lists_create_empty"></block>
             <block type="rule_group"></block>
             <block type="basic_expression"></block>
+            <block type="is_contained_in"></block>
+            <block type="is_between"></block>
         </xml>
 
-        <script>
-            var workspace = Blockly.inject('blocklyDiv',
-            {toolbox: document.getElementById('toolbox')});
-        </script>
+        <xml xmlns="https://developers.google.com/blockly/xml" id="workspaceBlocks" style="display: none">
+            <block type="event_validate" 
+                id="root_validate" 
+                x="10" y="10"
+                deletable="false"/>
+        </xml>
+
+        
+        <button onclick="GenerateJson()">Generate</button>
+        <div id="json_output" style="border: 1px; width: auto">{}</div>
+        <script src="workspace.js"></script>
 
     </body>
 </html>
