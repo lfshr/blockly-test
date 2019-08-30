@@ -76,31 +76,43 @@ Blockly.Blocks['is_between'] = {
 Blockly.JavaScript['rule_group'] = function(block) {
   var dropdown_operator = block.getFieldValue('operator');
   var dropdown_desired_value = block.getFieldValue('desired_value');
-  var statements_children = Blockly.JavaScript.statementToCode(block, 'children');
+  var inputBlock = block.getInputTargetBlock("children")
+  var statements_children = []
 
-  if(statements_children === "") {
-    statements_children = "[]"
+  while(inputBlock !== null)
+  {
+    let code = Blockly.JavaScript.blockToCode(inputBlock, true)
+    let parsed = JSON.parse(code)
+    statements_children.push(parsed)
+    inputBlock = inputBlock.getNextBlock()
   }
+
   // TODO: Assemble JavaScript into code variable.
   var code = JSON.stringify({
     ExpressionType: dropdown_operator,
     DesiredResult: dropdown_desired_value,
-    Rules: JSON.parse(statements_children)
+    Rules: statements_children
   });
   return code;
 };
 
 Blockly.JavaScript['event_validate'] = function(block) {
-  var statements_children = Blockly.JavaScript.statementToCode(block, 'children');
+  var inputBlock = block.getInputTargetBlock("children")
+  var statements_children = []
 
-  if(statements_children === "") {
-    statements_children = "[]"
+  while(inputBlock !== null)
+  {
+    let code = Blockly.JavaScript.blockToCode(inputBlock, true)
+    let parsed = JSON.parse(code)
+    statements_children.push(parsed)
+    inputBlock = inputBlock.getNextBlock()
   }
+
   // TODO: Assemble JavaScript into code variable.
   var code = JSON.stringify({
     ExpressionType: "and",
     DesiredResult: 1,
-    Rules: JSON.parse(statements_children)
+    Rules: statements_children
   });
   return code;
 };
