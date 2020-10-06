@@ -77,13 +77,21 @@ Blockly.JavaScript['rule_group'] = function(block) {
   var dropdown_operator = block.getFieldValue('operator');
   var dropdown_desired_value = block.getFieldValue('desired_value');
   var inputBlock = block.getInputTargetBlock("children")
-  var statements_children = []
+  var childRuleGroups = []
+  var rules = []
 
   while(inputBlock !== null)
   {
     let code = Blockly.JavaScript.blockToCode(inputBlock, true)
     let parsed = JSON.parse(code)
-    statements_children.push(parsed)
+
+    if(inputBlock.type == "rule_group") {
+      childRuleGroups.push(parsed)
+    }
+    else {
+      rules.push(parsed)
+    }
+
     inputBlock = inputBlock.getNextBlock()
   }
 
@@ -91,7 +99,8 @@ Blockly.JavaScript['rule_group'] = function(block) {
   var code = JSON.stringify({
     ExpressionType: dropdown_operator,
     DesiredResult: dropdown_desired_value,
-    Rules: statements_children
+    ChildRuleGroups: childRuleGroups,
+    Rules: rules
   });
   return code;
 };
