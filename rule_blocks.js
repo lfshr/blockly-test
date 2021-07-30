@@ -97,6 +97,7 @@ Blockly.JavaScript['rule_group'] = function(block) {
 
   // TODO: Assemble JavaScript into code variable.
   var code = JSON.stringify({
+    Type: "RuleGroup",
     ExpressionType: dropdown_operator,
     DesiredResult: dropdown_desired_value,
     ChildRuleGroups: childRuleGroups,
@@ -119,6 +120,7 @@ Blockly.JavaScript['event_validate'] = function(block) {
 
   // TODO: Assemble JavaScript into code variable.
   var code = JSON.stringify({
+    Type: "Rule",
     ExpressionType: "and",
     DesiredResult: 1,
     Rules: statements_children
